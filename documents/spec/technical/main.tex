@@ -1,0 +1,1072 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[left = 1in, right = 1in, bottom=1in, top=1in]{geometry}
+
+\usepackage{caption}
+
+\usepackage{float} % here for H placement parameter
+
+\usepackage{array,ragged2e} %for text centering in tables
+\newcolumntype{P}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
+\usepackage[ % only brought in for +/- symbol
+  separate-uncertainty = true,
+  multi-part-units = repeat
+]{siunitx}
+
+\makeatletter
+\def\thickhline{%
+  \noalign{\ifnum0=`}\fi\hrule \@height \thickarrayrulewidth \futurelet
+   \reserved@a\@xthickhline}
+\def\@xthickhline{\ifx\reserved@a\thickhline
+               \vskip\doublerulesep
+               \vskip-\thickarrayrulewidth
+             \fi
+      \ifnum0=`{\fi}}
+\makeatother
+\newlength{\thickarrayrulewidth}
+\setlength{\thickarrayrulewidth}{4\arrayrulewidth}
+
+\usepackage{multirow}
+\usepackage{fixltx2e} % subscript
+\usepackage{hyperref}
+\title{Coral Tile Technical Specification}
+\author{Narek Boghozian}
+\date{May 2020}
+
+\begin{document}
+
+\maketitle
+%\vspace{0.5in}
+\tableofcontents
+\pagebreak
+\section{Purpose}
+The purpose of this document is to provide a complete technical overview of the Coral Tile. For a non-technical overview, refer to the Coral Tile Product Specification document. For an overview of the build phases, refer to the Coral Tile Development Plan.
+
+
+
+
+\section{Device BOM}
+
+Will be compiled once individual subsystem BOMs are complete.
+
+\pagebreak
+
+\section{Form Factor}
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item Research to see if resin will cause issues with thermal expansion, cracking, etc. Soft resin may be best option, like silicone
+    \item ...
+\end{itemize}
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item Hydrobarometer should be mounted on the bottom. If there is an air bubble, this shouldn't affect the reading and it may protect dust settling if it's mounted on the bottom. Mounting on bottom may even allow for reduction of bezel size.
+    \item How will air bubble in hydrobarometer affect balance underwater. Air bubble may or may not be present.
+\end{itemize}
+
+\subsection{Material}
+\subsubsection{Case}
+Prototypes will use printed \& surface finished PLA or ABS. The finishing process will take into consideration waterproofing as detailed below.
+
+\subsubsection{Fill}
+Resin filling will close air gaps to reduce bouyancy, protect electronics in the event of structural damage, and provide a solid filling increasing durability. 
+
+\subsubsection{Weight}
+The device will be weighted using metal pieces such as rounds or rebar.
+
+\subsection{Dimensions}
+
+
+\subsection{Screen}
+The screen is a 10 cm x 10 cm glass monochrome LCD with a viewing angle at 12 o clock. This screen uses pins instead of zebra strip as pins are more durable and will provide a method by which to accurately measure temperature. The screen will display large and small values. Large numbers are used for meters depth with 1 decimal place and compass with number of degrees based on navigational standards. Small numbers and symbols are used for the compass rose, error code, battery indicator, and device ID number.\\[12pt]
+The viewing angle of 12 o clock is selected with the assumption that the device will be positioned upright and possibly at an angle. Given that this device will be viewed from above, a 12 o clock viewing angle is optimal.
+
+\subsection{Manufacturing}
+Injection molded ABS is likely to be the most cost effective solution for production at scale. After molds are produced (~2-4k) each part is priced based on weight of material used and weight/volume for shipping. Guidelines exist for the low cost production of parts. Generally less intricate and smaller parts can be made more cheaply. There are also considerations for part geometry such as draft angle and undercuts.\\[12pt]
+
+
+\subsection{Waterproofing}
+
+\subsubsection{Case material}
+The case material itself must also be waterproof. This is not a challenge with industrially manufactured plastic or metal components, however it is an issue for some 3d printed parts, depending on the printing method and can be somewhat mitigated with certain printing parameters
+
+\subsubsection{Internal components}
+In the case of a possible leak, all electronic components will be coated in resin. This also serves to remove air from the device and to provide redundancy for the LCD/Case intersection.
+
+\subsubsection{LCD/Case intersection}
+A sealant will be used with appropriate channels embedded in the case front interior to accommodate the sealant. The structure of this intersection is very important. It will be specifically designed to provide much surface area and structural pieces to secure the sealant to both the lcd and the frame.
+
+\subsubsection{Back cover seal}
+The main case body will feature a continuous groove and the back covering will feature a continuous tongue to mate with one another providing enough left over space for a sealant.
+
+\subsubsection{Mammoth seal}
+The hydrobarometer will sit on the back covering with the sensors water inlet hole aligned to an opening on the back covering. This will be aligned using geometry around the sensor. This will be resin shut into place, providing no possibility for leakage. 
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item Mammoth waterproofing
+    \item Sealing the rest of the device
+\end{itemize}
+
+
+\pagebreak
+
+
+
+
+
+
+
+
+
+
+\section{Subsystem Overview}
+
+To reduce ambiguity, subsystems are referred to using code-names and are outlined below. Subsystems are formed on an abstraction of components based on function. 
+
+\subsection*{Yosemite}
+
+This subsystem is the 'brain' of the device. It is responsible for almost all system events, with the exception of battery management. When the device is moved, an interrupt from the motion sensor wakes up Yosemite which sends reads the sensors and sends the appropriate data to the display. Yosemite also is responsible for switching on and off power to the subsystems as deemed appropriate in order to preserve power. This is implemented using a low power variant of the STM32 micro-controller and an EEPROM chip to store data.
+
+
+\subsection*{Redwood}
+
+This subsystem is responsible for battery management including charging and safety/protections and is where the cell is contained. In the event of overheating, a short circuit, or other potentially damaging events, this subsystem can restrict battery usage or disconnect the cell from the rest of the system entirely. This is implemented using 2 independent microchips for redundancy.
+
+
+\subsection*{Alpine}
+
+This subsystem is the implementation of the Qi based wireless charging feature. It utilizes an inductive charging coil, a dedicated Qi-controller microchip, and many supporting passive components. This subsystem is linked with the Redwood subsystem as this is the only way to charge the device. This is the input for power, and every other component is downstream of this subsystem.
+
+
+\subsection*{Lassen}
+
+This subsystem is the implementation Wi-Fi feature which utilizes an ESP32 for a cost effective solution both in terms of dollar amount and programming time. The rich community surrounding this device provides many open source solutions to this design challenge. 
+
+
+\subsection*{Sierra}
+
+The Sierra subsystem includes both the display and the the display driver. The display for Sierra is a large custom made monochrome LCD. This is similar to the displays in dive computers, although much larger for greater readability. The LCD provides data on depth, magnetic orientation, battery status, error codes, and a programmable on device serial number.
+
+
+\subsection*{Mammoth}
+
+This subsystem contains the most important sensor on the device, the hydro-barometer. Through this sensor, we can determine the depth, thus providing the most relevant piece of information for the researchers.
+
+
+\subsection*{Muir}
+
+This subsystem contains the magnetometer and accelerometer which are combined into a single chip, powering the compass and motion detector respectively.
+
+\pagebreak
+
+\subsection{IO Matrix}
+
+
+
+
+
+
+
+
+
+
+
+\section{Yosemite (Micro-Controller + EEPROM)}
+The Yosemite subsystem is the subsystem which contains the STM32 Micro-controller which is the 'brain' of the device and the EEPROM for data storage. 
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item Create high impedance, high accuracy voltage divider for Mammoth output to Yosemite ADC
+    \item Read more of datasheet to discover other features
+    \item Define required circuit elements and settings
+    \item Pick backup battery/supercap. What size do we need for 8-12 months RTC time?
+    \item Define relevant constraints
+    \item Determine relevant peripherals, and what can be used at the same time
+    \item Is EEPROM the best data storage option? Write directly to ESP?
+    \item How to implement ICSP for Wifi update
+    \item Find out which chip size has the needed peripherals. Preferably the smallest will be used.
+    \item Alpine and Redwood will output voltages above 3.6 volts (MCU max). Should a SMPS be used? 2 could be used, one during low power and another during high power operation. They could always output 1.8 V, although it would be best if backup battery was charged to 3.6, so perhaps extra circuitry there unless a low voltage battery was used. The high power one would need to be activated during motion activation to feed power in time for higher current required. Possible effect on magnetometer?
+    \item Find the voltage divider circuit
+    \item Contact representatives to clarify suitable backup batteries - \href{https://industrial.panasonic.com/content/data/BT/docs/edbd/ni_mh/Introduction\%20of\%20Nickel\%20Metal\%20Hydride\%20Battery_Web_20200203.pdf}{Candidate from Panasonic}
+\end{itemize}
+
+\subsubsection{Yosemite BOM}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Yosemite BOM}\label{MCURequiredComponents}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+    \hline
+    \multirow{2}{*}{Ref} & \multirow{2}{*}{Component} & \multirow{2}{*}{Value} & \multirow{2}{*}{Qty\textsuperscript{(1)}} & \multicolumn{4}{c|}{Price break\textsuperscript{(2)}} & \multirow{2}{*}{Alternate}\\
+    \cline{5-8}
+     & & & & 1 & 10 & 25 & 100 & \\
+     \thickhline
+     U1 & Microcontroller & STM32L412K8T6\textsuperscript{(3)} & 1 & & & & & No \\
+     \hline
+     U2 & EEPROM & M95M01-DFDW6TP & 1 & & & & & Yes\textsuperscript{(4)} \\
+     \hline
+     U3 & RTC & & 1 & & & & & \\
+     \hline
+     & & & & & & & & \\
+     \hline
+     & & & & & & & & \\
+     \hline
+     & & & & & & & & \\
+     \hline
+     & & & & & & & & \\
+     \hline
+     & & & & & & & & \\
+     \hline
+     & & & & & & & & \\
+     \hline
+\end{tabular}
+\begin{enumerate}
+    \item Quantity per device for this specific subsystem.
+    \item Unit price at price break quantity.
+    \item XX - pin chip variant
+    \item M95M01-RDW6TP - Pin to Pin compatible. Doesn't have space for secure ROM which isn't used
+\end{enumerate}
+\end{center}
+\end{table}
+
+
+\subsection{MCU}
+The STM32L412K8T6 will be used for this device for its extremely low power consumption and useful peripherals.
+
+
+\subsubsection{Peripherals and Key Features}
+3x I2C, 3x USART, 1x LPUART, 2x SPI, 2x 12-bit ADC - 5 Msps, 16-bit HW oversampling, 2.5 V or 2.024 V reference voltage\\[12pt]
+RTC with backup mode, 128 KB Flash, 40 KB SRAM
+
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Peripheral Map}\label{MCUPeripheralsUsed}
+\begin{tabular}{|c|c|c|}
+    \hline
+     Peripheral & Use & Comments \\
+    \thickhline
+    \multirow{3}{*}{I2C} & Muir & \\
+     & Sierra & \\
+     & Redwood & \\
+     & Mammoth & \\
+    \hline
+    SPI & EEPROM & Shared w/Lassen\\
+    \hline
+    ADC &  & \\
+    \hline
+    \multirow{3}{*}{Interrupt} & Muir & Activation\\
+     & Alpine & Charging on\\
+     & Redwood & Brown out\\
+    \hline
+    \multirow{2}{*}{I/O} & & \\ %for switching components
+     & & \\
+    \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item SMPS will not be used for Yosemite as the gains are marginal given the already low power non SMPS design and device will not be supplying significant current via I/O
+    \item Power Range 2 will be used as it is lower power consumption. Range 2 is limited to a max clock speed of 26 MHz, although this does not present any limitations for this application. Additionally, the USB functionality and random number generator, which will not be used, are disabled for this power mode, saving power.
+    \item 25 $^\circ$C is what will be used to reference power consumption values.
+    \item Wakeup times will not be considered as they are all significantly less than 1 ms.
+    \item RTC is considered on for all power calculations.
+    \item Power modes 'Run' and 'Standby' will be used. 
+    \item Boot modes could be used for an auto update.
+    \item SysTick shuts off when the CPU is off. Thus, RTC must be used for continuous time measurement
+    \item \href{http://embedded-lab.com/blog/stm32s-internal-rtc/}{This} page shows useful info on the RTC.
+    \item ADC will not be oversampled as a 12 bit ADC will give 1.2 cm accuracy at 6.4 mv/kPa
+    \item Mammoth will need ADC for input and output. Does input voltage affect output voltage? Can test
+    \item Will be polling Mammoth to see if submerged
+\end{itemize}
+
+
+\subsubsection{Terms}
+\begin{tabular}{c l}
+    BOR & Brown Out Reset\\
+    PVD & Programmable Voltage Detector\\
+    PVM & Peripheral Voltage Monitoring\\
+    RNG & Random Number Generator\\
+    RTC & Real Time Clock
+\end{tabular}
+\vspace{1em}
+
+
+\subsubsection{Power}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{MCU Power Modes}\label{MCUPowerModes}
+\begin{tabular}{ |c|c|c|c|P{4cm}|P{4cm}|c| }
+ \hline
+ Mode & CPU & Flash & SRAM & Peripherals & Wakeup source & Consumption \\
+ \thickhline
+ Run & Yes & On & On & All except USB\_FS, RNG & N/A & 79 $\mu$A/MHz \\
+ \hline
+ Sleep & No & On & On & All except USB\_FS, RNG & Any interrupt & 20 $\mu$A/MHz \\
+ \hline
+ Stop 0 & No & Off & On & BOR, PVD, PVM RTC, IWDG COMP1, OPAMP1 USARTx LPUART1 I2Cx\textsuperscript{(1)} LPTIMx & Reset pin, all I/Os, BOR, PVD, PVM RTC, IWDG COMP1, USARTx, LPUART1, I2Cx\textsuperscript{(1)}, LPTIMx, USB\_FS & 105 $\mu$A \\
+ \hline
+ Stop 1 & No & Off & On & BOR, PVD, PVM, RTC, IWDG, COMP1, OPAMP1, USARTx, LPUART1, I2Cx\textsuperscript{(1)}, LPTIMx & Reset pin, all I/Os, BOR, PVD, PVM, RTC, IWDG, COMP1, USARTx, LPUART1, I2Cx\textsuperscript{(1)}, LPTIMx, USB\_FS & 3.65 $\mu$A \\
+ \hline
+ Stop 2 & No & Off & On & BOR, PVD, PVM, RTC, IWDG, COMP1, LPUART1, I2C3\textsuperscript{(1)}, LPTIMx & Reset pin, all I/Os, BOR, PVD, PVM, RTC, IWDG, COMP1, USARTx, LPUART1, I2Cx\textsuperscript{(1)}, LPTIMx & 950 nA \\
+ \hline
+ Standby & Off & Off & Off & BOR, RTC, IWDG & Reset pin, 4 I/Os (WKUPx), BOR, RTC, IWDG, I/O configuration can be floating, pull-up or pull-down\textsuperscript{(2)} & 105 nA \\
+ \hline
+ Shutdown & Off & Off & Off & RTC & Reset pin, 4 I/Os (WKUPx), RTC, I/O configuration can be floating, pull-up or pull-down\textsuperscript{(2)} & 18 nA \\
+ \hline
+\end{tabular}
+\end{center}
+\begin{enumerate}
+    \item I2C address detection is functional in Stop mode, and generates a wakeup interrupt in case of address match.
+    \item I/Os can be configured with internal pull-up, pull-down or floating in Shutdown mode but the configuration is lost when exiting the Shutdown mode.
+\end{enumerate}
+\end{table}
+\begin{table}[H]
+\begin{center}
+\captionof{table}{MCU Electrical Characteristics}\label{MCUElectricalCharacteristics}
+\begin{tabular}{ |c|c|c|c|c|c| }
+ \hline
+ Value & Parameter & Min & Typ & Max & Unit \\
+ \thickhline
+ V\textsubscript{DD} & Standard operating voltage & 1.71 & - & 3.6 & V \\ 
+ \hline
+ V\textsubscript{BAT} & Backup operating voltage & 1.55 & - & 3.6 & V \\ 
+ \hline
+\end{tabular}\\[12pt] 
+\end{center}
+\end{table}
+\begin{table}[H]
+\begin{center}
+\captionof{table}{MCU Current}\label{MCUCurrent}
+ \begin{tabular}{ |c|p{5cm}|c|c|c|c|c| }
+ \hline
+ Value & Parameter & F\textsubscript{HCLK} & Min & Typ & Max & Unit \\
+ \thickhline
+ \multirow{7}{*}{I\textsubscript{DD\_ALL} (Run)}&\multirow{7}{*}{Supply current in Run mode }
+    & 26 MHz & - & 2.05 & 2.20 & \multirow{7}{*}{mA} \\
+  \cline{3-6}
+  & & 16 MHz & - & 1.30 & 1.40 &  \\
+  \cline{3-6}
+  & & 8 MHz  & - & 0.715 & 0.76 &  \\
+  \cline{3-6}
+  & & 4 MHz  & - & 0.415 & 0.45 &  \\
+  \cline{3-6}
+  & & 2 MHz  & - & 0.265 & 0.30 &  \\
+  \cline{3-6}
+  & & 1 MHz  & - & 0.190 & 0.20 &  \\
+  \cline{3-6}
+  & & 100 KHz & - & 0.120 & 0.15 &  \\
+ \hline
+ I\textsubscript{DD\_ALL} (Shutdown) & RTC enabled, ENULP=1\textsuperscript{(2)}, external quartz\textsuperscript{(3)} & - & 230 & 320 & 400 & nA\\
+ \hline
+ I\textsubscript{DD\_VBAT} (VBAT) & Backup domain supply current w/RTC\textsuperscript{(1)} & - & 300 & 400 & 500 & nA \\
+ \hline
+\end{tabular}
+\begin{enumerate}
+    \item 300 nA at 1.8 V up to 500 nA at 3.6 V
+    \item ENULP=1 sets continous power supply monitoring to periodic to save power
+    \item Based on characterization done with a 32.768 kHz crystal (MC306-G-06Q-32.768, manufacturer JFVNY) with two 6.8 pF loading capacitors.
+\end{enumerate}
+\end{center}
+\end{table}
+
+
+\subsubsection{ICSP}
+The In Circuit Serial Programming circuitry must not interfere with any downstrean processes. if nevessary, place mosfets pulled high with a large resistor then pull low if needed to cut off circuit from system.
+
+
+\subsubsection{Backup Battery}
+This battery is used only to maintain the Real-Time Clock (RTC). During normal operation, the battery charge can be maintained through a simple resistor-based charging circuit embedded in the STM32. When the main battery voltage is cut due to low power, the RTC functionality of the STM32 is maintained and time stamps are not lost.\\[12pt]
+The backup battery needs to be a low self discharge battery, as the self discharge will be responsible for almost all of the battery discharge during this time as only the RTC is running during V\textsubscript{BAT} mode consuming 300 nA. 
+
+
+\subsection{EEPROM}
+The M95M01-DFDW6TP from ST will be be used (M95M01-RDW6TP as pin to pin compatible alternate). This provides 1Mb (128 KB) of storage for data logs.
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item Determine needed EEPROM size. How much data will need to be stored?
+\end{itemize}
+
+\subsubsection{Memory Usage}
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Memory map}\label{EEPROMMemoryMap}
+\begin{tabular}{|c|c|c|}
+    \hline
+    Size & Usage & Comments \\
+    \thickhline
+    128 bits & Device status \& errors &  \\
+    \hline
+    128 bits & ESP based preferences & \\
+    \hline
+    x bits & Data logs & x bit $\times$ x \\
+    \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Data Log Format}\label{EEPROMLogFormat}
+\begin{tabular}{|c|c|c|}
+    \hline
+    Size & Usage & Comments \\
+    \thickhline
+     & Log Header & \\
+    \hline
+     & Log Packets & \\
+    \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Log Packet}\label{EEPROMLogPacket}
+\begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    Ref & Size & Type & Usage & Comments & Units\\
+    \thickhline
+    HEAD & 16 bit & uint16 & Packet Header & Packet header data\textsuperscript{(3)} & - \\
+    \hline
+    PRES & 16 bit & uint16 & Pressure & Used to calculate depth\textsuperscript{(5)}  & Pascals \\ %based on kPa
+    \hline
+    COMP & 16 bit & uint16 & Compass & Compass data & Degrees \\
+    \hline
+    TICK & 32 bit & uint32 & Tick & Time since device start & Seconds\\
+    \hline
+    DATE & 32 bit & uint32 & Date & Timestamp in Unix time since 1/1/2000\textsuperscript{(1)} & Seconds \\
+    \hline
+    VBAT & 8 bit & uint8 & Battery voltage & See below for conversion\textsuperscript{(2)} & mV \\
+    \hline
+    TEMP & 8 bit & int8 & Temperature & See below for conversion\textsuperscript{(4)} & Celcius\\
+    \thickhline
+    - & 128 bit & - & - & Total & - \\
+    \hline
+    
+\end{tabular}
+\begin{enumerate}
+    \item To convert to standard unix time, add 946684800 to DATE. This is a variation on unix time used to save space.
+    \item V = 5000 * VBAT / 255, this gives a step size of 19.6 mV. This is used for debugging
+    \item Header carries data condition such as if packet is timestamped, is marked for deletion, firmware version
+    \item T = 25 + TEMP / 10, this gives a step size of 0.1$^\circ$C. To save space, the device is assumed to be operating at approx 25$^\circ \pm$12.8$^\circ$. Temperature may be used for pressure compensation and is recorded using an independent sensor close to display pins for the most accurate readings.
+    \item Pressure is listed instead of calculated depth as this may be more useful for researchers if depth calculations need to be changed based on other conditions like salinity or atmospheric conditions. Calculated depth can be displayed on server using same calculations.
+\end{enumerate}
+\end{center}
+\end{table}
+
+
+
+\pagebreak
+
+
+\subsection{ADC input buffer/voltage divder}
+The MCU is not 5 V tolerant and the ADC measures values from 0 to some lower voltage reference. The ADC impedance is from 10kOhm to 50kOhm so a simple resistor voltage divider on the input will not work. An OpAmp based voltage diver / buffer will need to be implemented accounting for all non ideal behaviour of the OpAmp including bias current and voltage offset between -/+ terminals.
+
+
+
+
+
+
+
+
+
+
+\section{Redwood (Battery Management + Cell)}
+The Redwood subsystem is what contains the main battery and its protection and charging circuitry.
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item Find ideal Chips based on voltage constraints from system
+    \item Find batteries (for prototypes, 2 or 3 puff batteries will be used. Probably final battery will be same? Decide when making manufacturing plan
+\end{itemize}
+
+\subsection{Cell}
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item Cell size expected to be approx 500 mAh. More or less based on demand.
+    \item Li-Ion cells will be used
+\end{itemize}
+
+
+\subsection{Charging/Gas Gauge}
+\subsubsection{Notes}
+\begin{itemize}
+    \item Check to see if chips can give learned/updated values of total battery capacity
+    \item Will any voltage info be provided? If not, must use ADC for voltage info
+\end{itemize}
+
+
+\subsection{Protection}
+\subsubsection{Notes}
+\begin{itemize}
+    \item Is secondary protection necessary? Will charging IC provide primary protection? Including short circuit and uvp protection.
+\end{itemize}
+
+\pagebreak
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Alpine (Wireless Charging)}
+The Alpine subsystem is what is responsible for the wireless charging feature and includes the charging coil itself as well.
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item Choose coil
+    \item Determine passive values
+    \item Read datasheet to find other useful functionality
+    \item ...
+\end{itemize}
+
+\subsection{Chip}
+The BQ51013BRHLR is used for this feature. The BQ51013BRHLR requires minimal external components and provides full Qi rx functionality.
+
+
+
+\begin{center}
+\captionof{table}{BQ51013BRHLR Electrical Characteristics}\label{AlpineElectricalCharacteristics}
+ \begin{tabular}{ |c|c|c|c|c| }
+ \hline
+ Value & Parameter & Min & Max & Unit \\
+ \thickhline
+ V\textsubscript{OUT-REG} & Regulated output voltage &  &  & V \\ 
+ \hline
+ I\textsubscript{OUT} & Current limit programming range & - &  & mA \\ 
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+
+\subsection{Coil}
+
+\pagebreak
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Lassen (Wi-Fi Server + Firmware Update)}
+The Lassen subsystem is what is responsible for the WiFi feature and almost entirely consists of the ESP32 which will be used.
+\subsubsection{To-Do}
+\begin{itemize}
+    \item How is EEPROM going to work with File Server
+    \item ...
+\end{itemize}
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item Time can be retreived from system/browser using \href{https://www.plus2net.com/javascript_tutorial/clock.php}{this}. The time should be verified before download is allowed.
+    \item MySQL can be used with C++ to read data from EEPROM and convert to CSV
+    \item ESP can reprogram data logs to contain the actual time so it can remain in case of tick reset
+    \item If ESP is re-programmable, it should have a fail-safe mode. Fail-safe should have previous firmware. If new firmware meets some fail condition, it will reprogram itself to stock firmware.
+    \item Should be able to select date range to download?
+    \item ESP can hold a firmware update for itself and the STM and reprogram itself and the STM when necessary.
+    \item ESP has enough space to completely load EEPROM into its own flash.
+    \item Possibly feed data into server whenever device is connected to internet?
+    \item Data will be up to 8000 logs, so data should be separated by date.
+    \item To speed up server, data should be decoded once requested.
+\end{itemize}
+
+\subsection{Electrical Requirements}
+
+
+
+\subsection{UI/UX}
+\subsubsection{Notes}
+\begin{itemize}
+    \item Simple but attractive interface to minimize size requirement
+    \item Display error values or failed functions
+    \item Display battery percentage
+    \item Enable cookies to save user preferences (dark mode, search filters)
+    \item ESP will act as both an AP (access point) and as a Client. This will allow firmware updates while simultaneously maintaining functionality. Download progress bar can be on top of webpage.
+    \item server will use WebSocket
+    \item php, html, css, mySQL, c++ can be used to make almost all functinoality
+    \item php can be used to force downloads to client
+    \item Flash all screen elements on motion wake
+    \item Have instructions all on device
+\end{itemize}
+
+
+\subsection{Configurability}
+\subsubsection{Notes}
+\begin{itemize}
+    \item Should be able to configure some device parameters from UI (sampling rate, 
+\end{itemize}
+
+
+\subsection{File Server}
+\subsubsection{Notes}
+\begin{itemize}
+    \item Data will be stored in EEPROM and download will stream data to client
+\end{itemize}
+
+
+\subsection{Firmware Update}
+\subsubsection{Notes}
+\begin{itemize}
+    \item Update code will be downloaded from github, asking user to enter details for internet connected wifi source
+    \item Update code will be loaded into EEPROM or self contained memory
+    \item Failsafe will run stock firmware to ensure device cannot be bricked
+\end{itemize}
+
+
+\pagebreak
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Sierra (LCD Display + Driver)}
+The Sierra subsystem consists of the LCD and its driver chip and any supporting circuitry.
+
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item List all required items on display
+    \item Design one in inkscape
+    \item get quotes from vendors based on different sized we could do
+    \item ...
+\end{itemize}
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item Compass needs to be larger and ID, Error code, and BAT symbol can be smaller as these wont be used during dives.
+    \item Compass rose can be redesigned to give larger arrows 
+    \item Possibly flash compass rose to indicate that a lock hasn't been found yet.
+\end{itemize}
+
+\subsection{Display}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Display Items}\label{SierraDisplayItems}
+\begin{tabular}{|c|c|c|}
+    \hline
+    Item & \# of segments & Comments\\
+    \thickhline
+    Depth & 23 & 7 * 3 + 2, 7 per digit with decimal point and 'm' symbol\\
+    \hline
+    Compass Digits & 22 & 7 * 3 + 1,  7 per digit with degrees symbol \\
+    \hline
+    Compass Rose & 9 & 8 arrows and 1 'N' symbol\\
+    \hline
+    Error Code & & Binary digits represent individual errors\\
+    \hline
+    Battery & 1 & Battery indicator - 'BAT' symbol\\
+    \hline
+    ID & & Serial number. Configurable\\
+    \thickhline
+    Total & xx & \\
+    \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsection{Driver}
+
+PCA8551ATT/AJ\\
+https://www.nxp.com/docs/en/data-sheet/PCA8551.pdf\\
+https://www.digikey.com/en/products/detail/nxp-usa-inc/PCA8551ATT-AJ/5981025\\
+Low Power, I2C, 36x4 segments with backplane multiplexing
+
+\pagebreak
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Mammoth (Hydro-Barometer + Temperature Sensor)}
+The Mammoth subsystem is what is responsible for the depth measurement feature. 
+
+\subsection{Mammoth BOM}
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Mammoth BOM}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+    \hline
+    \multirow{2}{*}{Ref} & \multirow{2}{*}{Component} & \multirow{2}{*}{Value} & \multirow{2}{*}{Qty\textsuperscript{(1)}} & \multicolumn{4}{c|}{Price break\textsuperscript{(2)}} & \multirow{2}{*}{Alternate}\\
+    \cline{5-8}
+     & & & & 1 & 10 & 25 & 100 & \\
+     \thickhline
+     U & Hydrobarometer & MPX5700A & 1 & & & & & No \\
+     \hline
+     U & Temperature sensor & SI7051-A20-IMR & 1 & & & & & Yes\textsuperscript{(3)} \\
+     \hline
+\end{tabular}
+\begin{enumerate}
+    \item Quantity per device for this specific subsystem.
+    \item Unit price at price break quantity.
+    \item SI7051-A20-IM. 'R' Variant is in Reel. Necessary for mass production. Not always in stock.
+\end{enumerate}
+\end{center}
+\end{table}
+
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item List power/electronic constraints
+    \item Make sure it works in salt water
+\end{itemize}
+
+\subsection{Hydro-Barometer}
+
+The sensor used is the MPX5700A. NOT THIS. \href{https://www.nxp.com/docs/en/data-sheet/MPX5700.pdf}{Datasheet available here}. This device was chosen from the small selection of devices available on the market based on its durable and relatively easily integratable form factor. 
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item Calibration?
+    \item Salinity measurement?
+\end{itemize}
+
+\subsubsection{Power}
+This device requires a boost converter which is outlined below in the 'Power Supply' section.
+
+\subsection{Temperature Sensor}
+The SI7051-A20-IMR will be used as the temperature sensor. \href{https://www.silabs.com/documents/public/data-sheets/Si7050-1-3-4-5-A20.pdf}{Datasheet available here}. This is used to compensate for density variations based on temperature and is logged. This specific model was chosen for low cost, higher precision, and the large heat sink on the bottom which will provide much surface area for conduction.
+
+\subsubsection{Design considerations}
+\begin{itemize}
+    \item Mounted near the LCD pins
+    \item Away from power dissipating components
+    \item Away from black components on LCD
+    \item Copper placement should be minimized in that area so that any potential system heat can be avoided
+    \item Trace from lcd pins can be routed near/under this sensor.
+\end{itemize}
+
+\subsubsection{Power}
+This chip is very low power, although the voltage level is somewhat awkward. This may be combined with other low power 3.3 V components under a single lower power LDO.
+
+\subsection{Power Supply}
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item Boost converter output will be fed through linear voltage regulator (LDO) to supply smooth voltage to hydrobarometer.
+    \item Frequency of boost and LDO must be matched to achieve greatest ripple voltage attenuation
+    \item Will need low pass filter on Vout?
+\end{itemize}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Boost Requirements}\label{MammothBoostRequirements}
+\begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    Value & Parameter & Min & Typ & Max & Unit  \\
+    \thickhline
+    V\textsubscript{DD} & Supply Voltage & 2.8 & - & 4.2 & V\\
+     \hline
+    V\textsubscript{Out} & Output Voltage & 5.8 & 6.0 & 6.2 & V\\
+    \hline
+    I\textsubscript{Out} & Output Current & - & 10 & 20 & mA\\
+    \hline
+    
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{LDO Requirements}\label{MammothLDORequirements}
+\begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    Value & Parameter & Min & Typ & Max & Unit  \\
+    \thickhline
+    V\textsubscript{DD} & Supply Voltage & 5.8 & 6.0 & 6.2 & V\\
+     \hline
+    V\textsubscript{Out} & Output Voltage & 4.8 & 5.0 & 5.2 & V\\
+    \hline
+    I\textsubscript{Out} & Output Current & 7.0 & - & 15 & mA\\
+    \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+\pagebreak
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Muir (Compass + Motion Detection)}
+The Muir subsystem is what is responsible for both the compass feature and the motion activation feature. The LSM303AHTR IC from ST will be used for both magnetometer and accelerometer functionality.
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item Ensure functionality is the same as the AGR chip (out of stock / discontinued)
+\end{itemize}
+
+\subsubsection{Muir BOM}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{XXX BOM}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+    \hline
+    \multirow{2}{*}{Ref} & \multirow{2}{*}{Component} & \multirow{2}{*}{Value} & \multirow{2}{*}{Qty\textsuperscript{(1)}} & \multicolumn{4}{c|}{Price break\textsuperscript{(2)} } & \multirow{2}{*}{Alternate}\\
+    \cline{5-8}
+     & & & & 1 & 10 & 25 & 100 & \\
+    \thickhline
+    U & Sensor & LSM303AHTR & 1 & 3.21 & 2.88 & 2.73 & 2.36 & No \\
+    \hline
+     & & & & & & & & \\
+    \hline
+\end{tabular}
+\begin{enumerate}
+    \item Quantity per device for this specific subsystem.
+    \item Unit price at price break quantity.
+\end{enumerate}
+\end{center}
+\end{table}
+
+
+\subsubsection{Notes}
+\begin{itemize}
+    \item Measurement range for Linear acceleration can be set to \SI{50 \pm 2} g. The accuracy is 16 mg/LSB \SI{50 \pm 7}{\percent}
+    \item Power mode for Linear acceleration can be low power mode
+    \item At lowest field strength of 250 mg, 1 degree offset corresponds to approx 3 mg difference. Therefore, magnetometer must be at high resolution with low pass filter enabled. This gives 120 $\mu$A current consumption with 10 Hz 
+    \item Turn on time for magnetometer in set mode is taken to be 120 ms.
+    \item Currents of greater than 10 mA will be kept at least 5 mm away from device.
+    \item CS\_XL and CS\_MAG are set high for I2C enable
+    \item Customized registers need to be rewritten upon every wake
+\end{itemize}
+
+
+\subsubsection{Features}
+\begin{tabular}{l}
+    Tilt compensated compass\\
+    Magnetometer correction\\
+    Configurable motion activated interrupt generator\\
+    Magnetometer self test\\
+    I2C and SPI\\
+    Integrated thermistor\\
+    Click and Double-Click detection\\
+\end{tabular}
+
+
+
+
+
+\subsubsection{Registers}
+
+\begin{table}[H]
+\begin{center}
+\captionof{table}{Muir Register Map}\label{MuirRegisterMap}
+\begin{tabular}{ |c|c|c|c|c|c|c| }
+    \hline
+    \multirow{2}{*}{Name} & \multirow{2}{*}{Type} & \multicolumn{2}{c|}{Register address} & \multirow{2}{*}{Default} & \multirow{2}{*}{New} & \multirow{2}{*}{Notes}\\
+    \cline{3-4}
+    & & Hex & Binary & & & \\
+    \thickhline
+    CTRL\_REG1\_A & a & a & a & a & a & a \\
+    \hline
+    
+    \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Things to configure in register upon boot
+\begin{itemize}
+    \item magnetometer High Accuracy set to enable
+    \item magnetometer low pass filter set to enable
+    \item accelerometer low power mode
+    \item accelerometer range at 2 g
+\end{itemize}
+
+
+
+
+\subsection{General}
+
+\begin{table}[H]
+\begin{center}
+ \captionof{table}{LSM303AHTR Electrical Characteristics}\label{MuirElectricalCharacteristics}
+\begin{tabular}{ |c|c|c|c|c|c| }
+ \hline
+ Value & Parameter & Min & Typ & Max & Unit \\
+ \thickhline
+ V\textsubscript{DD} & Standard operating voltage & 1.71 & - & 1.98 & V \\ 
+ \hline
+ V\textsubscript{MAX} & Maximum voltage & -0.3 & - & 2.2 & V \\
+ \hline
+ T\textsubscript{OP} & Operating Temperature & -40 & - & +85 & $^\circ$C \\
+ \hline
+ 
+\end{tabular}\\[12pt]  
+\end{center}
+\end{table}
+
+
+\subsubsection{Policy}
+\begin{itemize}
+    \item Click activation interrupt is sent when accelerometer detects that the device has been tapped.
+    \item If click activation fails, then the feature is disabled and only charging/submersion will activate it. Error code will display on device and on web page.
+    \item Magnetometer is powered down in device sleep mode, while accelerometer is running for motion detection.
+    \item Accelerometer is powered down in device active mode, while magnetometer is running in high accuracy mode for compass function.
+    \item 
+\end{itemize}
+
+\subsection{Magnetometer}
+
+\subsubsection{Specifications}
+\begin{itemize}
+    \item Turn on time: 10 ms
+    \item Frequency: 10 Hz, 20 Hz, 50 Hz, 100 Hz
+    \item Current: 25 $\mu$A - 120 $\mu$A @ 10 Hz
+    \item Current: 250 $\mu$A - 1130 $\mu$A @ 100 Hz
+    \item Maximum exposed field: 10000 gauss
+    \item 9 mg RMS noise at low power mode
+\end{itemize}
+
+\begin{table}[H]
+    \centering
+    \captionof{table}{Magnetometer Characteristics}
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        Symbol & Parameter & Conditions & Value & Unit \\
+        \thickhline{}
+        t\textsubscript{ON} & Turn on time & & 10 & ms \\
+        \hline
+        
+    \end{tabular}
+\end{table}
+
+
+\subsection{Accelerometer}
+
+
+\begin{table}[H]
+    \centering
+    \captionof{table}{Accelerometer Characteristics}
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        Symbol & Parameter & Conditions & Value & Unit \\
+        \thickhline{}
+        t\textsubscript{ON} & Turn on time & & 10 & ms \\
+        \hline
+        
+    \end{tabular}
+\end{table}
+
+\subsection{Gyroscope}
+Currently, there are no plans to add a gyroscope. Gyroscopic data would provide a means of filtering magnetometer data with rotational data to provide a more instantaneous and user friendly way to display the compass.\\[12pt]
+If a gyroscope is deemed necessary, the following items need to be taken in to consideration.
+\begin{itemize}
+    \item Drift
+    \item Low movement behaviour
+    \item Unlevel rotation
+    \item Power consumption
+    \item Processor demand
+\end{itemize}
+Furthermore, it may be most economical to search for a 9 axis IMU which combines gyroscope with magnetometer and accelerometer for this added functionality.
+
+
+
+
+\end{document}
+
+%Examples
+
+\subsubsection{To-Do}
+\begin{itemize}
+    \item 
+    \item ...
+\end{itemize}
+
+
+\begin{center}
+\captionof{table}{My sophisticated table}\label{sophisticatedtable}
+\begin{tabular}{ |p{30pt}|p{30pt}|p{30pt}|p{30pt}|p{30pt}|p{30pt}|p{30pt}|p{30pt}| }
+    \hline
+    a & a & a & a & a & a & a & a \\
+    \hline
+\end{tabular}
+\end{center}
+In table \ref{sophisticatedtable} on page \pageref{sophisticatedtable} we can see ...
+
+% Sample BOM
+\begin{table}[H]
+\begin{center}
+\captionof{table}{XXX BOM}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+    \hline
+    \multirow{2}{*}{Ref} & \multirow{2}{*}{Component} & \multirow{2}{*}{Value} & \multirow{2}{*}{Qty\textsuperscript{(1)}} & \multicolumn{4}{c|}{Price break\textsuperscript{(2)}} & \multirow{2}{*}{Alternate}\\
+    \cline{5-8}
+     & & & & 1 & 10 & 25 & 100 & \\
+     \thickhline
+     U1 & Device Type & Part Number & 1 & & & & & No \\
+     \hline
+     & & & & & & & & \\
+     \hline
+\end{tabular}
+\begin{enumerate}
+    \item Quantity per device for this specific subsystem.
+    \item Unit price at price break quantity.
+\end{enumerate}
+\end{center}
+\end{table}
