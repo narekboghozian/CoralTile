@@ -104,9 +104,6 @@ The ultimate purpose of adding WiFi and Wireless Charging to this device is to m
 
 This device is intended to be sturdy enough to fall from several feed (off a table, etc) onto a hard floor. The materials used to ensure stability and prevent breaks/cracks in electronic components are specified in the Technical Specification document.
 
-### Lifespan
-
-The lifespan of this device, as with most battery powered electronics, is determined by two factors. The battery lifespan and device construction. By fitting this device with a large battery, it will remain usable for many years after the battery has degraded significantly. The target lifespan of this device is to be 10 years.
 
 ### Vulnerabilities
 
