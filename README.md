@@ -1,4 +1,4 @@
-# CoralTile
+# Coral Tile
 
 ## Introduction
 
