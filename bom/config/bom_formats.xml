@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!-- Each format uses particular ordering of
+some of the tags. Each tag under a format
+represents each sql parameter. The value in
+the tag is the header name, as they could
+be different depending on BOM format. The 
+order is important, this is the output 
+order when exported as CSV.
+ -->
+<BomFormat version=1>
+	<complete id=0 description="All parameters.">
+		<quantity>Qty</quantity>
+	</complete>
+	<reduced id=1 description="Only most relevant parameters.">
+		<quantity>Qty</quantity>
+	</reduced>
+	<octopart id=2>
+		<quantity>Qty</quantity>
+	</octopart>
+	<digikey id=3>
+
+	</digikey>
+	<mouser id=4>
+
+	</mouser>
+	<arrow id=5>
+
+	</arrow>
+</BomFormat>
